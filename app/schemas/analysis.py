@@ -1,5 +1,5 @@
 """Pydantic schemas for analysis requests and responses."""
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, field_validator
 
@@ -27,6 +27,8 @@ class SingleBet(BaseModel):
     match: str
     market: str
     selection: str
+    point: Optional[float]
+    display_market: str
     bookmaker: str
     odds: float
     estimated_probability: float
@@ -41,6 +43,8 @@ class ParlayLeg(BaseModel):
     match: str
     market: str
     selection: str
+    point: Optional[float]
+    display_market: str
     bookmaker: str
     odds: float
     estimated_probability: float
