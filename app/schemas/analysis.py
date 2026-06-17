@@ -66,6 +66,7 @@ class AnalysisResponse(BaseModel):
     bankroll: float
     total_events_analyzed: int
     best_singles: list[SingleBet]
+    all_singles: list[SingleBet]
     total_singles_found: int
     allocated_stake: float
     remaining_risk: float
