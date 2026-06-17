@@ -27,7 +27,7 @@ class SingleBet(BaseModel):
     match: str
     market: str
     selection: str
-    point: Optional[float]
+    point: Optional[float] = None
     display_market: str
     bookmaker: str
     odds: float
@@ -43,7 +43,7 @@ class ParlayLeg(BaseModel):
     match: str
     market: str
     selection: str
-    point: Optional[float]
+    point: Optional[float] = None
     display_market: str
     bookmaker: str
     odds: float
