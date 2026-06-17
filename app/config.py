@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     # Risk management
     max_stake_pct_single: float = 0.02   # 2% bankroll per single
     max_stake_pct_parlay: float = 0.005  # 0.5% bankroll per parlay
-    min_ev_threshold: float = 0.03       # Minimum 3% EV to consider a bet
+    min_ev_threshold: float = 0.0        # Show all bets with positive EV
 
     # HTTP
     request_timeout: float = 10.0
