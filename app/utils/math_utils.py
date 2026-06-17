@@ -95,6 +95,25 @@ def kelly_stake(
     return round(min(raw, cap), 2)
 
 
+def format_market(market: str, selection: str, point: float | None) -> str:
+    """
+    Build a human-readable market label including the line value.
+
+    Examples:
+        totals  / Over  / 2.5  → "Over 2.5 goles"
+        spreads / Spain / -1.5 → "Spain -1.5 hándicap"
+        h2h     / Italy / None → "Ganador: Italy"
+    """
+    if market == "totals" and point is not None:
+        return f"{selection} {point} goles"
+    if market == "spreads" and point is not None:
+        sign = "+" if point > 0 else ""
+        return f"{selection} {sign}{point} hándicap"
+    if market == "h2h":
+        return f"Ganador: {selection}"
+    return selection
+
+
 def risk_level(ev: float, kf: float) -> str:
     """
     Classify bet risk.
