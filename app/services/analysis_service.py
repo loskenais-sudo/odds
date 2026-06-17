@@ -26,6 +26,7 @@ from app.schemas.odds import OddsEvent
 from app.utils.math_utils import (
     devig_market,
     expected_value,
+    format_market,
     implied_probability,
     kelly_fraction,
     kelly_stake,
@@ -144,13 +145,13 @@ class AnalysisService:
         - Identifies the best available odds across all bookmakers.
         - EV = (consensus_prob × best_odds) − 1.
         """
-        # Gather (bookmaker_title, [(outcome_name, price), ...]) pairs
-        bk_markets: list[tuple[str, list[tuple[str, float]]]] = []
+        # Gather (bookmaker_title, [(outcome_name, price, point), ...]) pairs
+        bk_markets: list[tuple[str, list[tuple[str, float, float | None]]]] = []
         for bookmaker in event.bookmakers:
             for market in bookmaker.markets:
                 if market.key != market_key:
                     continue
-                outcomes = [(o.name, o.price) for o in market.outcomes]
+                outcomes = [(o.name, o.price, o.point) for o in market.outcomes]
                 if len(outcomes) >= 2:
                     bk_markets.append((bookmaker.title, outcomes))
 
@@ -160,7 +161,8 @@ class AnalysisService:
         # Consensus fair probabilities (average devigged across all bookmakers)
         all_fair: dict[str, list[float]] = {}
         for _bk, outcomes in bk_markets:
-            for name, prob in devig_market(outcomes).items():
+            name_price = [(name, price) for name, price, _ in outcomes]
+            for name, prob in devig_market(name_price).items():
                 all_fair.setdefault(name, []).append(prob)
 
         consensus: dict[str, float] = {
@@ -168,17 +170,17 @@ class AnalysisService:
             for name, probs in all_fair.items()
         }
 
-        # Best odds per outcome and which bookmaker offers them
-        best: dict[str, tuple[float, str]] = {}
+        # Best odds per outcome, which bookmaker offers them, and the line value
+        best: dict[str, tuple[float, str, float | None]] = {}
         for bk_title, outcomes in bk_markets:
-            for name, price in outcomes:
+            for name, price, point in outcomes:
                 if name not in best or price > best[name][0]:
-                    best[name] = (price, bk_title)
+                    best[name] = (price, bk_title, point)
 
         bets: list[SingleBet] = []
         market_label = MARKET_LABELS.get(market_key, market_key)
 
-        for outcome_name, (odds, bk_title) in best.items():
+        for outcome_name, (odds, bk_title, point) in best.items():
             est_prob = consensus.get(outcome_name)
             if not est_prob or est_prob <= 0:
                 continue
@@ -187,6 +189,7 @@ class AnalysisService:
             ev = expected_value(est_prob, odds)
             kf = kelly_fraction(est_prob, odds)
             edge = est_prob - impl_prob
+            display = format_market(market_key, outcome_name, point)
 
             reason = (
                 f"{market_label}: estimated prob {est_prob:.1%} vs "
@@ -197,8 +200,10 @@ class AnalysisService:
             bets.append(
                 SingleBet(
                     match=event.match_name,
-                    market=market_label,
+                    market=market_key,
                     selection=outcome_name,
+                    point=point,
+                    display_market=display,
                     bookmaker=bk_title,
                     odds=round(odds, 3),
                     estimated_probability=round(est_prob, 4),
@@ -257,6 +262,8 @@ class AnalysisService:
                     match=leg.match,
                     market=leg.market,
                     selection=leg.selection,
+                    point=leg.point,
+                    display_market=leg.display_market,
                     bookmaker=leg.bookmaker,
                     odds=leg.odds,
                     estimated_probability=leg.estimated_probability,
