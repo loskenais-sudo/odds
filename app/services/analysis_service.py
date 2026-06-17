@@ -85,6 +85,7 @@ class AnalysisService:
             bankroll=request.bankroll,
             total_events_analyzed=len(events),
             best_singles=final[:10],
+            all_singles=positive,
             total_singles_found=len(positive),
             allocated_stake=round(allocated, 2),
             remaining_risk=round(request.max_daily_risk - allocated, 2),
